@@ -1,6 +1,7 @@
-//T. Pires - main.dart - Main file for "Get Started with Flutter and Dart" course Birdle application.
+//T. Pires - main.dart - The main file for the Birdle Flutter application. Created following alongside the tutorial at 
+//https://docs.flutter.dev/learn/pathway/tutorial/create-an-app.
 //Created 2026-04-12
-//Last Updated 2026-04-12
+//Last Updated 2026-04-13
 
 import 'game.dart';
 import 'package:flutter/material.dart';
@@ -31,43 +32,43 @@ class MainApp extends StatelessWidget {
 class Tile extends StatelessWidget {
   const Tile(this.letter, this.hitType, {super.key});
 
-  //Constructor
   final String letter;
   final HitType hitType;
-  //
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 60.0,
-      height: 60.0,
-
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 500),
+      curve: Curves.bounceIn,
+      height: 60,
+      width: 60,
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade300),
-        color: switch(hitType){
+        color: switch (hitType) {
           HitType.hit => Colors.green,
           HitType.partial => Colors.yellow,
           HitType.miss => Colors.grey,
           _ => Colors.white,
         },
       ),
-
       child: Center(
         child: Text(
           letter.toUpperCase(),
           style: Theme.of(context).textTheme.titleLarge,
         ),
       ),
-
     );
   }
 }
 
-class GamePage extends StatelessWidget {
+class GamePage extends StatefulWidget {
+  const GamePage({super.key});
 
-  GamePage({super.key});
-  // This object is part of the game.dart file.
-  // It manages wordle logic, and is outside the scope of this tutorial.
+  @override
+  State<GamePage> createState() => _GamePageState();
+}
+
+class _GamePageState extends State<GamePage> {
   final Game _game = Game();
 
   @override
@@ -75,20 +76,23 @@ class GamePage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
-        spacing: 5.0,
         children: [
-          for(var guess in _game.guesses)
+          for (var guess in _game.guesses)
             Row(
-              spacing: 5.0,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                for(var letter in guess)
-                  Tile(letter.char, letter.type),
+                for (var letter in guess)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2.5, vertical: 2.5),
+                    child: Tile(letter.char, letter.type),
+                  )
               ],
             ),
-            GuessInput(
-            onSubmitGuess: (String guess) {
-              // TODO, handle guess
-              print(guess); // Temporary
+          GuessInput(
+           onSubmitGuess: (String guess) {
+              setState(() {
+                _game.guess(guess);
+              });
             },
           ),
         ],
@@ -97,14 +101,17 @@ class GamePage extends StatelessWidget {
   }
 }
 
+
 class GuessInput extends StatelessWidget {
   GuessInput({super.key, required this.onSubmitGuess});
 
   final void Function(String) onSubmitGuess;
+
   final TextEditingController _textEditingController = TextEditingController();
+
   final FocusNode _focusNode = FocusNode();
 
-  void onSubmit(){
+  void _onSubmit() {
     onSubmitGuess(_textEditingController.text.trim());
     _textEditingController.clear();
     _focusNode.requestFocus();
@@ -114,40 +121,31 @@ class GuessInput extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-
         Expanded(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               maxLength: 5,
+              focusNode: _focusNode,
+              autofocus: true,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(35)),
                 ),
               ),
               controller: _textEditingController,
-              autofocus: true,
-              focusNode: _focusNode,
-              onSubmitted: (String input) {
-                onSubmit();
+              onSubmitted: (String value) {
+                _onSubmit();
               },
             ),
           ),
         ),
-
-        Expanded(child: Container()),
         IconButton(
           padding: EdgeInsets.zero,
-          icon: Icon(Icons.arrow_circle_up),
-          onPressed: () {
-            onSubmit();
-          },
+          icon: const Icon(Icons.arrow_circle_up),
+          onPressed: _onSubmit,
         ),
       ],
     );
   }
 }
-
-
-
-
